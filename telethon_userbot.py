@@ -30,6 +30,7 @@ BOT_CONFIG_ENDPOINT = os.getenv('BOT_CONFIG_ENDPOINT', 'https://ztakepayments.ve
 API_ID_ENV = os.getenv('API_ID')
 API_HASH_ENV = os.getenv('API_HASH')
 SESSION_NAME = os.getenv('SESSION_NAME', 'ztake_userbot')
+DEBUG_ALL_MESSAGES = os.getenv('DEBUG_ALL_MESSAGES', '0') in ('1', 'true', 'True')
 TELETHON_STRING_SESSION_ENV = os.getenv('TELETHON_STRING_SESSION', '')
 BOT_TOKEN_ENV = os.getenv('BOT_TOKEN', '')
 
@@ -260,6 +261,8 @@ async def main() -> None:
     me = await client.get_me()
     running_as_bot = bool(getattr(me, 'bot', False))
 
+    logger.info('Startup configuration: authorized_chat=%r source_bot=%r running_as_bot=%r', cfg['authorized_chat_id'], source_bot_username or None, running_as_bot)
+
     @client.on(events.NewMessage(chats=authorized_chat))
     async def handler(event):
         try:
@@ -281,6 +284,25 @@ async def main() -> None:
             await userbot.process_text(event.chat_id, text, sender)
         except Exception as e:
             logger.exception(f"Error in handler: {e}")
+
+    # Optional catch-all debug logger: helps verify whether the client receives messages at all
+    if DEBUG_ALL_MESSAGES:
+        @client.on(events.NewMessage)
+        async def debug_handler(event):
+            try:
+                sender = await event.get_sender()
+                chat_id = event.chat_id
+                text_preview = (event.message.message or '')[:120]
+                logger.info("[DEBUG] Incoming message chat_id=%s sender_id=%s bot=%s text=%r", chat_id, getattr(sender, 'id', None), getattr(sender, 'bot', False), text_preview)
+                # If it's from the authorized chat but somehow filtered out by specific handler, process here
+                try:
+                    target_id = await resolve_authorized_chat(client, cfg['authorized_chat_id'])
+                    if chat_id == target_id:
+                        await userbot.process_text(chat_id, event.message.message or '', sender)
+                except Exception:
+                    pass
+            except Exception as e:
+                logger.exception(f"Error in debug handler: {e}")
 
     logger.info('Listening for new messages...')
     await client.run_until_disconnected()

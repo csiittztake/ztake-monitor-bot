@@ -260,6 +260,7 @@ async def main() -> None:
 
     me = await client.get_me()
     running_as_bot = bool(getattr(me, 'bot', False))
+    self_id = getattr(me, 'id', None)
 
     logger.info('Startup configuration: authorized_chat=%r source_bot=%r running_as_bot=%r', cfg['authorized_chat_id'], source_bot_username or None, running_as_bot)
 
@@ -267,6 +268,11 @@ async def main() -> None:
     async def handler(event):
         try:
             sender = await event.get_sender()
+            # Ignore our own messages to avoid loops/self-processing
+            if getattr(event, 'out', False):
+                return
+            if self_id is not None and getattr(sender, 'id', None) == self_id:
+                return
             # Filtering rules:
             # - If running as a bot (testing), accept all senders to allow smoke-tests
             # - If running as a user, enforce bot-only sender and optional username match

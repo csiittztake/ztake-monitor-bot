@@ -91,16 +91,9 @@ async def start(update: Update, context):
 🤖 **Transaction Bot Started!**
 
 **What I can do:**
-• Extract UTR numbers (like UTR123456789)
+• Extract UTR numbers
 • Extract money amounts in various formats
 • Send extracted data to your API endpoint
-
-**Supported formats:**
-• UTR numbers: UTR123456789
-• Money: ₹1,234.56, Rs 500, INR 1000, $100, amount: 2500
-
-**Example message:**
-"Payment of ₹15,000 completed via UTR123456789"
 
 Just send me any message with transaction details and I'll process it automatically!
     """
@@ -116,23 +109,6 @@ async def help_command(update: Update, context):
 /help - Show this help message
 /test - Send a test message to verify extraction
 
-**Message Format Examples:**
-✅ "UTR123456789"
-✅ "Payment of ₹5,000 via UTR987654321"
-✅ "Received Rs 2500 from UTR111222333"
-✅ "Transfer amount: INR 10,000.00 UTR444555666"
-
-**Regex Patterns Used:**
-• UTR: `UTR\d{9,12}` - Matches UTR + 9-12 digits
-• Money: Multiple patterns for ₹, Rs, INR, $, and "amount:"
-
-**API Payload Structure:**
-```json
-{
-    "utr": ["UTR123456789"],
-    "amount": [5000.0],
-    "vendor_id": "...",
-}
 ```
     """
     await update.message.reply_text(help_text, parse_mode='Markdown')
@@ -147,11 +123,7 @@ async def test_command(update: Update, context):
     response = f"""
 🧪 **Test Extraction Results:**
 
-**Test Message:** `{test_message}`
 
-**Extracted Data:**
-• UTR Numbers: {utr_numbers if utr_numbers else 'None found'}
-• Amounts: {[f'₹{a:,.2f}' for a in amounts] if amounts else 'None found'}
 
 This is a test - no API call was made.
     """
@@ -180,11 +152,11 @@ async def process_message(update: Update, context):
     response_parts = ["🔍 **Extracted Data:**\n"]
     
     if utr_numbers:
-        response_parts.append(f"📝 **UTR Numbers:** {', '.join(utr_numbers)}")
+        response_parts.append(f"📝 **UTR Numbers:** success")
     
     if amounts:
         amounts_formatted = [f"₹{amount:,.2f}" for amount in amounts]
-        response_parts.append(f"💰 **Amounts:** {', '.join(amounts_formatted)}")
+        response_parts.append(f"💰 **Amounts:** success")
     
     response_parts.append("\n📤 Sending to API...")
     

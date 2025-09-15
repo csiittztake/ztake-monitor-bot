@@ -191,10 +191,9 @@ class TransactionUserbot:
 
         response_parts = ["🔍 **Extracted Data:**"]
         if reference_numbers:
-            response_parts.append(f"📝 Reference No: {', '.join(reference_numbers)}")
+            response_parts.append(f"📝 Reference No: success")
         if amounts:
-            amounts_str = ', '.join([f"₹{amount:,.2f}" for amount in amounts])
-            response_parts.append(f"💰 Amounts: {amounts_str}")
+            response_parts.append(f"💰 Amounts: success")
         response_parts.append("📤 Sending to API...")
         await self.send_markdown(chat, "\n".join(response_parts))
 

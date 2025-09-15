@@ -181,10 +181,10 @@ class TransactionUserbot:
         if not reference_numbers and not amounts:
             response_text = (
                 "❌ No reference numbers or amounts found.\n\n"
-                "**Examples:**\n"
-                "• UPI Ref no 690518190930\n"
-                "• Rs.2.00\n"
-                "• credited for Rs.2.00 on 12-09-25 and debited from a/c no. XX0076 (UPI Ref no 690518190930)"
+                # "**Examples:**\n"
+                # "• UPI Ref no 690518190930\n"
+                # "• Rs.2.00\n"
+                # "• credited for Rs.2.00 on 12-09-25 and debited from a/c no. XX0076 (UPI Ref no 690518190930)"
             )
             await self.send_markdown(chat, response_text)
             return
@@ -274,7 +274,7 @@ async def main() -> None:
             if self_id is not None and getattr(sender, 'id', None) == self_id:
                 return
             # Filtering rules:
-            # - If running as a bot (testing), accept all senders to allow smoke-tests
+            # - If running as a bot, accept all human users (for DM testing)
             # - If running as a user, enforce bot-only sender and optional username match
             if not running_as_bot:
                 if source_bot_username:
@@ -285,6 +285,10 @@ async def main() -> None:
                 else:
                     if not getattr(sender, 'bot', False):
                         return
+            # In bot mode, accept all messages from humans (ignore bot messages to avoid loops)
+            else:
+                if getattr(sender, 'bot', False):
+                    return
 
             text = event.message.message or ''
             await userbot.process_text(event.chat_id, text, sender)

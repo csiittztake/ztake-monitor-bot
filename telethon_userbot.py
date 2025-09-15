@@ -300,13 +300,6 @@ async def main() -> None:
                 chat_id = event.chat_id
                 text_preview = (event.message.message or '')[:120]
                 logger.info("[DEBUG] Incoming message chat_id=%s sender_id=%s bot=%s text=%r", chat_id, getattr(sender, 'id', None), getattr(sender, 'bot', False), text_preview)
-                # If it's from the authorized chat but somehow filtered out by specific handler, process here
-                try:
-                    target_id = await resolve_authorized_chat(client, cfg['authorized_chat_id'])
-                    if chat_id == target_id:
-                        await userbot.process_text(chat_id, event.message.message or '', sender)
-                except Exception:
-                    pass
             except Exception as e:
                 logger.exception(f"Error in debug handler: {e}")
 

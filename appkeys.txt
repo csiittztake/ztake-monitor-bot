@@ -26,3 +26,7 @@ App api_id:
 
 App api_hash:
 0d01f66f955d4499a6e254216f9ff290
+
+
+
+-348823100

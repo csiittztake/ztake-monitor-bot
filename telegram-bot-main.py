@@ -169,10 +169,10 @@ async def process_message(update: Update, context):
     if not utr_numbers and not amounts:
         await update.message.reply_text(
             "❌ No UTR numbers or amounts found in your message.\n\n"
-            "Make sure to include:\n"
-            "• UTR numbers like: UTR123456789\n"
-            "• Money amounts like: ₹1,234.56, Rs 500, INR 1000\n\n"
-            "Send /help for more examples."
+            # "Make sure to include:\n"
+            # "• UTR numbers like: UTR123456789\n"
+            # "• Money amounts like: ₹1,234.56, Rs 500, INR 1000\n\n"
+            # "Send /help for more examples."
         )
         return
     

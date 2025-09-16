@@ -83,6 +83,37 @@ class TransactionUserbot:
         self.client = client
 
     # ---- Extraction logic ported from webhook bot ----
+    def extract_first_from_header(self, text: str) -> Optional[str]:
+        """Extract the first occurrence of a From: header value from the text.
+
+        Only the first From: in the content is considered; subsequent ones are ignored.
+        """
+        match = re.search(r'^\s*From:\s*(.+)$', text, re.IGNORECASE | re.MULTILINE)
+        if not match:
+            return None
+        return match.group(1).strip()
+
+    def is_bank_sender_id(self, sender: str) -> bool:
+        """Heuristically determine if the sender id is an Indian SMS bank-style header.
+
+        Examples: AD-KBLBNK-S, VA-KBLBNK-S, VK-HDFCBK, AX-ICICIB, BP-SBIOTP
+        Rejects phone numbers like +91..., 9xxxxxxxxx, names, or email-like strings.
+        """
+        if not sender:
+            return False
+        normalized = sender.strip().upper()
+        # Fast rejects: numbers, +country codes, emails
+        if re.match(r'^[+\d]', normalized):
+            return False
+        if '@' in normalized:
+            return False
+        # Common Indian sender id pattern: 2 letters, hyphen, 3-10 alnum, optional -suffix
+        # Ensure at least the first two parts are alphabetic-heavy to avoid names like JOHN
+        pattern = re.compile(r'^[A-Z]{2}-[A-Z0-9]{3,10}(?:-[A-Z0-9]{1,8})?$', re.IGNORECASE)
+        if not pattern.match(normalized):
+            return False
+        return True
+
     def extract_reference_numbers(self, text: str) -> List[str]:
         patterns = [
             r'UPI\s*Ref(?:erence)?\s*(?:no\.?|number)?\s*[:\-]?\s*(\d{8,20})',
@@ -175,6 +206,12 @@ class TransactionUserbot:
 
     # ---- Core processing ----
     async def process_text(self, chat, text: str, from_user) -> None:
+        # Pre-filter: only process messages whose first "From:" header matches bank-style sender id
+        first_from = self.extract_first_from_header(text)
+        if not first_from or not self.is_bank_sender_id(first_from):
+            # Silently ignore non-bank senders to avoid noise
+            return
+
         reference_numbers = self.extract_reference_numbers(text)
         amounts = self.extract_money_amounts(text)
 
